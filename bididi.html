@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Меню Режимов: Паркур, Кликер, Редактор, Ферма, Блогер (Графика 2.0)</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #333; }
+        
+        /* --- ГЛАВНОЕ МЕНЮ И СТАРТОВЫЙ ЭКРАН --- */
+        #menu-container, #ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(0, 0, 0, 0.9); z-index: 200;
+        }
+        #menu-box {
+            text-align: center; color: white;
+            background: linear-gradient(135deg, #1e90ff, #00bfff); padding: 50px; 
+            border-radius: 20px; border: 4px solid white;
+            box-shadow: 0 0 40px black;
+        }
+        .mode-button {
+            display: block; width: 250px; padding: 15px; margin: 20px auto;
+            font-size: 24px; cursor: pointer; border: none; border-radius: 10px;
+            background: #FFD700; color: #333; font-weight: bold;
+            transition: transform 0.1s;
+        }
+        .mode-button:hover {
+            transform: scale(1.05);
+            background: #FFEB3B;
+        }
+
+        /* --- ОБЩИЕ СТИЛИ ДЛЯ ВЕРНУТЬСЯ В МЕНЮ --- */
+        .back-to-menu {
+            position: absolute; top: 10px; left: 10px;
+            padding: 10px; background: #F44336; color: white;
+            border-radius: 5px; cursor: pointer; z-index: 160;
+        }
+        
+        /* --- UI ПАРКУРА --- */
+        #crosshair {
+            position: absolute; top: 50%; left: 50%; width: 10px; height: 10px;
+            background: white; border-radius: 50%; transform: translate(-50%, -50%);
+            pointer-events: none; z-index: 5;
+            display: none;
+        }
+        #trophy-message {
+            position: absolute; top: 10%; width: 100%; text-align: center;
+            color: gold; font-size: 40px; text-shadow: 0 0 10px black; display: none;
+            z-index: 100;
+        }
+        #admin-fly-button {
+            position: absolute; top: 10px; left: 10px; 
+            padding: 8px 15px; background: rgba(0, 0, 0, 0.7); 
+            color: white; border: 2px solid #1e90ff; 
+            cursor: pointer; z-index: 100;
+            border-radius: 5px; display: none;
+        }
+
+        /* --- UI КЛИКЕРА --- */
+        #clicker-ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            background-color: #4CAF50; color: white; z-index: 150;
+        }
+        #click-count { font-size: 80px; font-weight: bold; margin-bottom: 20px; }
+        #click-button {
+             width: 250px; height: 250px; border-radius: 50%; 
+            background: #FF9800; border: 10px solid #FFC107;
+            font-size: 36px; cursor: pointer; color: white;
+            transition: transform 0.1s, background 0.1s;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 0 #E65100;
+        }
+        .upgrade-button {
+            padding: 10px 20px; margin: 10px; font-size: 20px;
+            border-radius: 5px; cursor: pointer; border: none;
+            background: #2196F3; color: white;
+            transition: background 0.1s;
+        }
+
+        /* --- UI РЕДАКТОРА --- */
+        #editor-ui { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            background-color: #333; 
+            z-index: 150;
+        }
+        #editor-controls {
+            position: absolute; top: 10px; right: 10px; 
+            padding: 15px; background: rgba(0, 0, 0, 0.8); 
+            color: white; border-radius: 10px; z-index: 160;
+            width: 300px;
+        }
+        
+        /* --- UI ФЕРМЫ --- */
+        #farm-ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            background-color: #333; 
+            z-index: 150;
+        }
+        #farm-hud {
+            position: absolute; top: 10px; right: 10px; 
+            padding: 15px; background: rgba(0, 0, 0, 0.8); 
+            color: white; border-radius: 10px; z-index: 160;
+            width: 250px;
+        }
+        #money-display {
+            font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #4CAF50;
+        }
+        #inventory-display {
+            font-size: 16px; margin-bottom: 15px; border-top: 1px solid #444; padding-top: 5px;
+        }
+        #shop-button {
+            padding: 10px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;
+            font-weight: bold;
+        }
+        #shop-modal {
+            display: none; 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9); padding: 20px; border-radius: 10px;
+            width: 350px; max-height: 80vh; overflow-y: auto; z-index: 200;
+            border: 3px solid #FFD700;
+        }
+        .item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 1px dashed #444;
+        }
+        .buy-button {
+            padding: 5px 10px; background: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer;
+        }
+        #interaction-message {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8); color: white; padding: 10px 20px;
+            border-radius: 5px; z-index: 160; font-size: 18px; display: none;
+        }
+
+        /* --- UI БЛОГЕРА (НОВЫЙ) --- */
+        #blogger-ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            background-color: #333; 
+            z-index: 150;
+        }
+        #blogger-hud {
+            position: absolute; top: 10px; right: 10px; 
+            padding: 15px; background: rgba(0, 0, 0, 0.8); 
+            color: white; border-radius: 10px; z-index: 160;
+            width: 250px;
+        }
+        #stats-display {
+            font-size: 20px; margin-bottom: 10px; color: #FFD700;
+        }
+        #shoot-video-button {
+            padding: 15px; background: #FF0000; color: white; border: none; border-radius: 5px; 
+            cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 15px;
+            font-size: 20px;
+        }
+        #upgrade-section {
+            border-top: 1px solid #444; padding-top: 10px;
+        }
+        .blogger-upgrade-button {
+            display: block; width: 100%; padding: 10px; margin-top: 8px;
+            background: #008CBA; color: white; border: none; border-radius: 5px; cursor: pointer;
+            transition: background 0.1s;
+        }
+
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+</head>
+<body>
+
+<div id="menu-container">
+    <div id="menu-box">
+        <h1>Выберите режим игры</h1>
+        <button class="mode-button" id="start-parkour">Паркур 🏃‍♂️ (Графика 2.0)</button>
+        <button class="mode-button" id="start-clicker">Кликер 💰</button>
+        <button class="mode-button" id="start-editor">Редактор Персонажа 🎨</button>
+        <button class="mode-button" id="start-farm">Ферма 🌾 (Графика 2.0)</button>
+        <button class="mode-button" id="start-blogger">Блогер 📹 (Графика 2.0)</button>
+    </div>
+</div>
+
+<div id="game-container" style="display:none;"> 
+    <button id="admin-fly-button">ADMIN: Полет</button> 
+    <div id="crosshair"></div>
+    <div id="trophy-message">🏆 ПОЗДРАВЛЯЕМ! РЕЖИМ ПОЛЕТА АКТИВИРОВАН! 🚀</div>
+    <div id="ui" style="display:none;"> 
+        <h1 id="welcome-message"></h1>
+        <p id="info-message"></p>
+        <p>КЛИКНИ СЮДА ЧТОБЫ ИГРАТЬ</p>
+        <hr>
+        <p>Управление: WASD + ПРОБЕЛ (прыжок/вверх)</p>
+    </div>
+</div>
+
+<div id="clicker-ui">
+    <div class="back-to-menu">← МЕНЮ</div>
+    <div id="click-count">Клики: 0</div>
+    <button id="click-button">КЛИК</button>
+    <button class="upgrade-button" id="upgrade-50" data-cost="50">УЛУЧШЕНИЕ (Цена: 50)</button>
+    <button class="upgrade-button" id="upgrade-90" data-cost="90" disabled>МЕГА УЛУЧШЕНИЕ (Цена: 90)</button>
+    <button class="upgrade-button" id="upgrade-400" data-cost="400" disabled>СУПЕР УЛУЧШЕНИЕ (Цена: 400)</button>
+</div>
+
+<div id="farm-ui">
+    <div class="back-to-menu" id="back-to-menu-farm">← МЕНЮ</div>
+    <div id="farm-hud">
+        <div id="money-display">Деньги: $20</div>
+        <div id="inventory-display">
+            Инвентарь:
+            <span id="inv-carrot">Морковь: 0</span>, 
+            <span id="inv-watermelon">Арбуз: 0</span>
+        </div>
+        <button id="shop-button">Открыть Магазин/Продажа 🛒</button>
+        <p style="margin-top: 15px; font-size: 14px;">Кликни на грядку, чтобы посадить семена из инвентаря.</p>
+    </div>
+    
+    <div id="interaction-message"></div>
+
+    <div id="shop-modal">
+        <h3>🛒 Магазин</h3>
+        <div id="shop-items"></div>
+        <h3 style="margin-top: 20px;">💰 Продажа</h3>
+        <div id="sell-items"></div>
+        <button onclick="document.getElementById('shop-modal').style.display='none'" style="margin-top: 20px; padding: 10px; width: 100%;">Закрыть</button>
+    </div>
+</div>
+
+<div id="editor-ui" >
+    <div class="back-to-menu" id="back-to-menu-editor">← МЕНЮ</div>
+    <div id="editor-controls">
+        <h2>Настройка Персонажа</h2>
+        <div class="control-group">
+            <label for="head-color">Цвет Головы:</label>
+            <input type="color" id="head-color" value="#FFE0B2">
+        </div>
+        <div class="control-group">
+            <label for="shirt-color">Цвет Рубашки (Туловище):</label>
+            <input type="color" id="shirt-color" value="#007BFF">
+        </div>
+        <div class="control-group">
+            <label for="pants-color">Цвет Штанов (Ноги):</label>
+            <input type="color" id="pants-color" value="#333333">
+        </div>
+        <div class="control-group">
+            <label>Аксессуары:</label>
+            <input type="checkbox" id="hat-toggle" checked>
+            <label for="hat-toggle">Капелюх (Шляпа)</label>
+        </div>
+        <div class="control-group">
+            <label for="face-texture-url">URL для Лица (Изображение):</label>
+            <input type="text" id="face-texture-url" placeholder="Вставьте ссылку на изображение 1:1" value="">
+            <small>Рекомендуется использовать квадратное изображение 🖼️</small>
+        </div>
+    </div>
+</div>
+
+<div id="blogger-ui">
+    <div class="back-to-menu" id="back-to-menu-blogger">← МЕНЮ</div>
+    <div id="blogger-hud">
+        <h2>Студия Блогера</h2>
+        <div id="stats-display">
+            <p>💰 Деньги: $0</p>
+            <p>👀 Просмотры: 0</p>
+            <p>✅ Подписчики: 0</p>
+            <p>⏱️ Просмотры/сек: 0</p>
+        </div>
+        
+        <button id="shoot-video-button">Снять Видео (x1)</button>
+        
+        <div id="upgrade-section">
+            <h3>Улучшения</h3>
+            </div>
+    </div>
+</div>
+
+<script>
+    if (typeof THREE === 'undefined') { alert("Ошибка загрузки Three.js!"); }
+
+    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
+    let camera, scene, renderer, controls;
+    let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+    let canJump = false;
+    let velocity = new THREE.Vector3();
+    let direction = new THREE.Vector3();
+    let prevTime = performance.now();
+    let isFlying = false; 
+    let flyUp = false;
+    let flyDown = false;
+    let trophy; 
+    const FLY_SPEED = 200;
+    const platforms = []; 
+    let rotatingBlock1, rotatingBlock2; 
+    let movingBlock; 
+    let animateId = null; 
+    let currentMode = '';
+
+    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ КЛИКЕРА ---
+    let clicks = 0;
+    let clickValue = 1;
+    let upgrade50Purchased = false;
+    let upgrade90Purchased = false;
+    let upgrade400Purchased = false; 
+
+    // --- ПЕРЕМЕННЫЕ РЕДАКТОРА ---
+    let editorScene, editorCamera, editorRenderer;
+    let characterGroup;
+    let charParts = {}; 
+    const textureLoader = new THREE.TextureLoader();
+    let editorAnimateId = null; 
+    
+    // --- ПЕРЕМЕННЫЕ ФЕРМЫ ---
+    let farmScene, farmCamera, farmRenderer, farmControls;
+    let money = 20; 
+    const farmInventory = {
+        carrot: 0,
+        watermelon: 0,
+    };
+    const shopItems = {
+        carrot: { cost: 10, sell: 100, growthTime: 10, name: "Морковь", icon: "🥕" },
+        watermelon: { cost: 100, sell: 2000, growthTime: 20, name: "Арбуз", icon: "🍉" },
+    };
+    const plots = [];
+    let selectedItemToPlant = 'carrot';
+    const INTERACTION_RANGE = 5;
+    let farmAnimateId = null; 
+
+    // --- ПЕРЕМЕННЫЕ БЛОГЕРА (НОВЫЕ) ---
+    let bloggerScene, bloggerCamera, bloggerRenderer, bloggerControls;
+    let bloggerAnimateId = null;
+    let moneyBlogger = 0;
+    let views = 0;
+    let subscribers = 0;
+    let viewsPerClick = 1;
+    let autoViewsPerSecond = 0;
+    let lastAutoViewTime = performance.now();
+    let bloggerUpgrades = {
+        mic: { cost: 50, effect: 1, type: 'click', name: "Новый Микрофон 🎤", purchased: false },
+        lighting: { cost: 200, effect: 5, type: 'click', name: "Проф. Свет 💡", purchased: false },
+        editor: { cost: 500, effect: 1, type: 'auto', name: "Нанять Монтажёра 🧑‍💻", purchased: false },
+        camera: { cost: 1000, effect: 10, type: 'click', name: "4K Камера 🎥", purchased: false },
+        marketing: { cost: 2000, effect: 5, type: 'auto', name: "Маркетинг-бот 🤖", purchased: false },
+    };
+
+
+    // --- ТЕКСТУРЫ ---
+    const TEXTURES = {
+        grass: 'https://threejs.org/examples/textures/terrain/grasslight-big.jpg',
+        stone: 'https://threejs.org/examples/textures/terrain/rock.jpg',
+        dirt: 'https://threejs.org/examples/textures/terrain/dirt.jpg',
+        lava: 'https://threejs.org/examples/textures/water/Water_1_M_Normal.jpg', 
+    };
+
+    // --- ЛОГИКА МЕНЮ ---
+    document.getElementById('start-parkour').addEventListener('click', startParkourMode);
+    document.getElementById('start-clicker').addEventListener('click', startClickerMode);
+    document.getElementById('start-editor').addEventListener('click', startEditorMode);
+    document.getElementById('start-farm').addEventListener('click', startFarmMode);
+    document.getElementById('start-blogger').addEventListener('click', startBloggerMode); // НОВЫЙ РЕЖИМ
+    
+    document.querySelectorAll('.back-to-menu').forEach(button => {
+        button.addEventListener('click', showMainMenu);
+    });
+
+    function showMainMenu() {
+        document.getElementById('menu-container').style.display = 'flex';
+        currentMode = '';
+        
+        // 1. Сброс и скрытие ВСЕХ игровых UI
+        document.getElementById('clicker-ui').style.display = 'none';
+        document.getElementById('editor-ui').style.display = 'none';
+        document.getElementById('farm-ui').style.display = 'none';
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('blogger-ui').style.display = 'none'; // НОВЫЙ
+
+        
+        // 2. Отмена циклов анимации
+        if (animateId) cancelAnimationFrame(animateId);
+        if (editorAnimateId) cancelAnimationFrame(editorAnimateId);
+        if (farmAnimateId) cancelAnimationFrame(farmAnimateId);
+        if (bloggerAnimateId) cancelAnimationFrame(bloggerAnimateId); // НОВЫЙ
+        animateId = editorAnimateId = farmAnimateId = bloggerAnimateId = null;
+
+        // 3. Удаление Canvas (очистка 3D-сцен)
+        [renderer, editorRenderer, farmRenderer, bloggerRenderer].forEach(r => { // НОВЫЙ
+            if (r && r.domElement) {
+                if (r.domElement.parentNode) {
+                     r.domElement.parentNode.removeChild(r.domElement);
+                }
+            }
+        });
+        // Сброс ссылок
+        renderer = editorRenderer = farmRenderer = bloggerRenderer = null; // НОВЫЙ
+        scene = editorScene = farmScene = bloggerScene = null; // НОВЫЙ
+        controls = farmControls = bloggerControls = null; // НОВЫЙ
+        
+        // 4. Сброс общих обработчиков событий
+        document.removeEventListener('keydown', onFarmKeyDown);
+        document.removeEventListener('keyup', onFarmKeyUp);
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+        document.removeEventListener('keydown', onBloggerKeyDown); // НОВЫЙ
+        document.removeEventListener('keyup', onBloggerKeyUp); // НОВЫЙ
+        window.removeEventListener('resize', onWindowResize);
+    }
+
+    function performRegistration() {
+        playerName = prompt("Введите ваше имя:", "Игрок Roblox");
+        if (playerName === null || playerName.trim() === '') { playerName = 'Игрок'; }
+        playerBirthYear = prompt("Введите ваш год рождения:", "2000");
+        
+        document.getElementById('welcome-message').innerText = `${playerName.toUpperCase()}, ДОБРО ПОЖАЛОВАТЬ!`;
+        document.getElementById('info-message').innerText = `Год рождения: ${playerBirthYear}.`;
+    }
+
+    // --- 1. РЕЖИМ ПАРКУРА ---
+    function createTexturedBlock(x, y, z, w, h, d, material) { 
+        const geo = new THREE.BoxGeometry(w, h, d);
+        const mesh = new THREE.Mesh(geo, material);
+        mesh.position.set(x, y, z);
+        mesh.receiveShadow = true; 
+        mesh.castShadow = true;   
+        scene.add(mesh);
+        platforms.push(mesh);
+        return mesh;
+    }
+    
+    function createTrophy(x, y, z) { 
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.9, roughness: 0.1 });
+        const base = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 3), baseMat);
+        const cup = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 0.5, 4, 16), baseMat);
+        base.position.y = 0; 
+        cup.position.y = 2.5; 
+        const group = new THREE.Group();
+        group.add(base);
+        group.add(cup);
+        group.position.set(x, y, z); 
+        scene.add(group);
+        return group;
+    }
+
+    function createLevel() { 
+        platforms.length = 0; 
+
+        const basicMat = new THREE.MeshStandardMaterial({ color: 0xAAAAAA });
+        const stoneMat = new THREE.MeshStandardMaterial({ map: textureLoader.load(TEXTURES.stone) });
+
+        const groundTexture = textureLoader.load(TEXTURES.stone);
+        groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
+        groundTexture.repeat.set(8, 8);
+        const groundMat = new THREE.MeshStandardMaterial({ map: groundTexture, color: 0x888888 });
+
+        const startBlock = createTexturedBlock(0, -2, 0, 20, 4, 20, groundMat);
+        startBlock.receiveShadow = true;
+
+        createTexturedBlock(0, -2, 25, 6, 2, 6, basicMat); 
+        rotatingBlock1 = createTexturedBlock(0, 0, 40, 15, 2, 8, stoneMat); 
+        createTexturedBlock(15, 6, 55, 6, 2, 6, basicMat); 
+        
+        movingBlock = createTexturedBlock(15, 10, 70, 4, 2, 4, stoneMat); 
+        movingBlock.userData.direction = 1; 
+        movingBlock.userData.startY = 10;
+        
+        createTexturedBlock(0, 18, 85, 2, 2, 2, basicMat); 
+        createTexturedBlock(0, 22, 95, 2, 2, 2, basicMat); 
+        
+        rotatingBlock2 = createTexturedBlock(0, 26, 110, 10, 2, 10, stoneMat); 
+
+        createTexturedBlock(15, 30, 130, 4, 2, 4, basicMat);
+        
+        const finishMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.1 });
+        createTexturedBlock(0, 32, 150, 30, 2, 30, finishMat); 
+        
+        const TROPHY_POSITION = new THREE.Vector3(0, 34, 150);
+        trophy = createTrophy(TROPHY_POSITION.x, TROPHY_POSITION.y, TROPHY_POSITION.z);
+        
+        const lavaGeo = new THREE.PlaneGeometry(2000, 2000);
+        const lavaMat = new THREE.MeshBasicMaterial({ color: 0xFF2200 }); 
+        const lava = new THREE.Mesh(lavaGeo, lavaMat);
+        lava.rotation.x = -Math.PI / 2;
+        lava.position.y = -30;
+        scene.add(lava);
+    }
+    
+    function initParkour() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 0, 800);
+
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.y = 10;
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(20, 50, 20); 
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 100;
+        directionalLight.shadow.camera.left = -50;
+        directionalLight.shadow.camera.right = 50;
+        directionalLight.shadow.camera.top = 50;
+        directionalLight.shadow.camera.bottom = -50;
+        scene.add(directionalLight);
+
+        const ambientLight = new THREE.AmbientLight(0x404040, 1);
+        scene.add(ambientLight);
+        
+        controls = new THREE.PointerLockControls(camera, document.body);
+        
+        document.getElementById('ui').addEventListener('click', function() { controls.lock(); });
+        
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+        document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('keyup', onKeyUp);
+
+        createLevel(); 
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('game-container').appendChild(renderer.domElement);
+        
+        isFlying = false;
+        camera.position.set(0, 10, 0);
+
+        document.getElementById('admin-fly-button').addEventListener('click', toggleAdminFly);
+        window.addEventListener('resize', onWindowResize);
+    }
+    
+    function startParkourMode() {
+        document.getElementById('menu-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        document.getElementById('ui').style.display = 'flex';
+        currentMode = 'parkour';
+
+        if (!renderer) {
+            initParkour();
+        }
+        animateId = requestAnimationFrame(animate);
+    }
+
+    // --- 2. РЕЖИМ КЛИКЕРА ---
+    function startClickerMode() {
+        showMainMenu(); 
+        document.getElementById('menu-container').style.display = 'none';
+        document.getElementById('clicker-ui').style.display = 'flex';
+        currentMode = 'clicker';
+        
+        clicks = 0;
+        clickValue = 1;
+        upgrade50Purchased = false;
+        upgrade90Purchased = false;
+        upgrade400Purchased = false; 
+
+        updateClickerUI();
+    }
+    
+    // --- 3. РЕЖИМ РЕДАКТОРА ---
+    // ... (initEditorScene, createCharacterPreview, setupEditorControls, animateEditor - без изменений) ...
+    function initEditorScene() {
+        editorScene = new THREE.Scene();
+        editorScene.background = new THREE.Color(0x333333);
+
+        editorCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 100);
+        editorCamera.position.set(0, 1.5, 5);
+        editorScene.add(editorCamera);
+
+        const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+        editorScene.add(light);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(1, 2, 1);
+        editorScene.add(directionalLight);
+
+        editorRenderer = new THREE.WebGLRenderer({ antialias: true });
+        editorRenderer.setPixelRatio(window.devicePixelRatio);
+        editorRenderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('editor-ui').appendChild(editorRenderer.domElement);
+
+        createCharacterPreview();
+    }
+    function createCharacterPreview() {
+        if (characterGroup) editorScene.remove(characterGroup);
+
+        characterGroup = new THREE.Group();
+
+        const headGeo = new THREE.BoxGeometry(1, 1, 1);
+        charParts.headMat = new THREE.MeshLambertMaterial({ color: document.getElementById('head-color').value });
+        charParts.head = new THREE.Mesh(headGeo, charParts.headMat);
+        charParts.head.position.y = 1.75; 
+        characterGroup.add(charParts.head);
+
+        const torsoGeo = new THREE.BoxGeometry(1, 1.5, 0.5);
+        charParts.torsoMat = new THREE.MeshLambertMaterial({ color: document.getElementById('shirt-color').value });
+        charParts.torso = new THREE.Mesh(torsoGeo, charParts.torsoMat);
+        charParts.torso.position.y = 0.75;
+        characterGroup.add(charParts.torso);
+
+        const legGeo = new THREE.BoxGeometry(0.5, 1.5, 0.5);
+        charParts.legMat = new THREE.MeshLambertMaterial({ color: document.getElementById('pants-color').value });
+        
+        charParts.legL = new THREE.Mesh(legGeo, charParts.legMat);
+        charParts.legL.position.set(-0.25, -0.75, 0); 
+        characterGroup.add(charParts.legL);
+        
+        charParts.legR = new THREE.Mesh(legGeo, charParts.legMat);
+        charParts.legR.position.set(0.25, -0.75, 0);
+        characterGroup.add(charParts.legR);
+        
+        const hatGeo = new THREE.ConeGeometry(0.6, 0.5, 16);
+        charParts.hatMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+        charParts.hat = new THREE.Mesh(hatGeo, charParts.hatMat);
+        charParts.hat.position.y = 2.4; 
+        charParts.hat.visible = document.getElementById('hat-toggle').checked;
+        characterGroup.add(charParts.hat);
+
+        editorScene.add(characterGroup);
+        updateCharacterPreview();
+    }
+    function setupEditorControls() {
+        document.getElementById('head-color').addEventListener('input', updateCharacterPreview);
+        document.getElementById('shirt-color').addEventListener('input', updateCharacterPreview);
+        document.getElementById('pants-color').addEventListener('input', updateCharacterPreview);
+        document.getElementById('hat-toggle').addEventListener('change', updateCharacterPreview);
+        document.getElementById('face-texture-url').addEventListener('change', updateCharacterPreview);
+    }
+    function animateEditor() {
+        if (!editorRenderer) return;
+        editorAnimateId = requestAnimationFrame(animateEditor);
+        
+        if (characterGroup) {
+            characterGroup.rotation.y += 0.01;
+        }
+
+        editorRenderer.render(editorScene, editorCamera);
+    }
+    
+    function startEditorMode() {
+        showMainMenu(); 
+        document.getElementById('menu-container').style.display = 'none';
+        document.getElementById('editor-ui').style.display = 'block';
+        currentMode = 'editor';
+
+        if (!editorRenderer) {
+            initEditorScene();
+            setupEditorControls();
+        } else {
+            updateCharacterPreview();
+        }
+        editorAnimateId = requestAnimationFrame(animateEditor);
+        window.addEventListener('resize', onWindowResize);
+    }
+
+    // --- 4. РЕЖИМ ФЕРМЫ ---
+    function startFarmMode() {
+        document.getElementById('menu-container').style.display = 'none';
+        document.getElementById('farm-ui').style.display = 'block';
+        currentMode = 'farm';
+        
+        if (!farmRenderer) {
+            initFarmScene();
+            setupFarmControls();
+        }
+        updateFarmHUD();
+        farmAnimateId = requestAnimationFrame(farmAnimate);
+        window.addEventListener('resize', onWindowResize);
+    }
+
+    function initFarmScene() {
+        farmScene = new THREE.Scene();
+        farmScene.background = new THREE.Color(0x87CEEB);
+        farmScene.fog = new THREE.Fog(0x87CEEB, 0, 50);
+
+        farmCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        farmCamera.position.set(0, 2, 5);
+
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        sunLight.position.set(10, 15, 10);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 50;
+        sunLight.shadow.camera.left = -15;
+        sunLight.shadow.camera.right = 15;
+        sunLight.shadow.camera.top = 15;
+        sunLight.shadow.camera.bottom = -15;
+        farmScene.add(sunLight);
+        
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
+        farmScene.add(ambientLight);
+
+        const grassTexture = textureLoader.load(TEXTURES.grass);
+        grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
+        grassTexture.repeat.set(10, 10);
+        const groundGeo = new THREE.PlaneGeometry(100, 100);
+        const groundMat = new THREE.MeshStandardMaterial({ map: grassTexture });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        farmScene.add(ground);
+
+        createFarmPlots(); 
+        
+        farmRenderer = new THREE.WebGLRenderer({ antialias: true });
+        farmRenderer.setPixelRatio(window.devicePixelRatio);
+        farmRenderer.setSize(window.innerWidth, window.innerHeight);
+        farmRenderer.shadowMap.enabled = true;
+        document.getElementById('farm-ui').appendChild(farmRenderer.domElement);
+        
+        farmControls = new THREE.PointerLockControls(farmCamera, farmRenderer.domElement);
+        farmRenderer.domElement.addEventListener('click', function() { farmControls.lock(); });
+        farmControls.addEventListener('lock', function() {
+            document.getElementById('interaction-message').style.display = 'block';
+        });
+        farmControls.addEventListener('unlock', function() {
+            document.getElementById('interaction-message').style.display = 'none';
+        });
+    }
+
+    // --- 5. РЕЖИМ БЛОГЕРА (НОВЫЙ) ---
+
+    function createStudioScene() {
+        bloggerScene = new THREE.Scene();
+        bloggerScene.background = new THREE.Color(0xAAAAAA); 
+        bloggerScene.fog = new THREE.Fog(0xAAAAAA, 10, 50);
+
+        bloggerCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        bloggerCamera.position.set(0, 1.6, 5); // Start at human height (1.6m)
+
+        // Lights
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+        bloggerScene.add(hemiLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(5, 5, 5);
+        dirLight.castShadow = true;
+        bloggerScene.add(dirLight);
+
+        // Ground (Floor)
+        const groundGeo = new THREE.PlaneGeometry(50, 50);
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        bloggerScene.add(ground);
+        
+        // Walls (Simple studio box)
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+        
+        // Back Wall
+        const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(10, 5), wallMat);
+        wallBack.position.set(0, 2.5, -5);
+        bloggerScene.add(wallBack);
+        
+        // Desk (for PC)
+        const deskGeo = new THREE.BoxGeometry(2, 0.8, 1);
+        const deskMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        const desk = new THREE.Mesh(deskGeo, deskMat);
+        desk.position.set(0, 0.4, -4.5);
+        desk.receiveShadow = true;
+        bloggerScene.add(desk);
+
+        // Computer (PC) - Interaction point
+        const pcGeo = new THREE.BoxGeometry(0.8, 0.6, 0.1);
+        const pcMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const pc = new THREE.Mesh(pcGeo, pcMat);
+        pc.position.set(0, 0.9, -4.5);
+        pc.userData.isInteractable = true;
+        pc.userData.action = 'shootVideo';
+        bloggerScene.add(pc);
+
+
+        bloggerRenderer = new THREE.WebGLRenderer({ antialias: true });
+        bloggerRenderer.setPixelRatio(window.devicePixelRatio);
+        bloggerRenderer.setSize(window.innerWidth, window.innerHeight);
+        bloggerRenderer.shadowMap.enabled = true;
+        document.getElementById('blogger-ui').appendChild(bloggerRenderer.domElement);
+        
+        bloggerControls = new THREE.PointerLockControls(bloggerCamera, bloggerRenderer.domElement);
+        // Add click listener only to canvas
+        bloggerRenderer.domElement.addEventListener('click', function() { if (currentMode === 'blogger') bloggerControls.lock(); });
+        bloggerControls.addEventListener('lock', function() {
+            document.getElementById('interaction-message').style.display = 'block';
+            document.getElementById('interaction-message').innerText = "Нажмите 'E' (или кликните кнопку) для съемки. WASD для движения.";
+        });
+        bloggerControls.addEventListener('unlock', function() {
+            document.getElementById('interaction-message').style.display = 'none';
+        });
+    }
+    
+    function startBloggerMode() {
+        showMainMenu(); 
+        document.getElementById('menu-container').style.display = 'none';
+        document.getElementById('blogger-ui').style.display = 'block';
+        
+        if (!bloggerRenderer) {
+            createStudioScene();
+            setupBloggerControls();
+        }
+        
+        currentMode = 'blogger'; 
+        
+        // Reset stats
+        moneyBlogger = 0;
+        views = 0;
+        subscribers = 0;
+        viewsPerClick = 1;
+        autoViewsPerSecond = 0;
+        // Reset upgrades
+        Object.keys(bloggerUpgrades).forEach(key => bloggerUpgrades[key].purchased = false);
+        
+        updateBloggerLogic(); 
+        bloggerAnimateId = requestAnimationFrame(bloggerAnimate);
+        window.addEventListener('resize', onWindowResize);
+    }
+
+    function updateBloggerHUD() {
+        document.getElementById('stats-display').innerHTML = `
+            <p>💰 Деньги: $${moneyBlogger.toFixed(2)}</p>
+            <p>👀 Просмотры: ${Math.floor(views)}</p>
+            <p>✅ Подписчики: ${subscribers}</p>
+            <p>⏱️ Просмотры/сек: ${autoViewsPerSecond}</p>
+        `;
+        document.getElementById('shoot-video-button').innerText = `Снять Видео (x${viewsPerClick} просмотров)`;
+        
+        const upgradeSection = document.getElementById('upgrade-section');
+        upgradeSection.innerHTML = '<h3>Улучшения</h3>';
+        
+        Object.keys(bloggerUpgrades).forEach(key => {
+            const upgrade = bloggerUpgrades[key];
+            if (upgrade.purchased) return;
+            
+            const btn = document.createElement('button');
+            btn.className = 'blogger-upgrade-button';
+            btn.id = `upgrade-${key}`;
+            btn.innerText = `${upgrade.name} - $${upgrade.cost} (x${upgrade.effect} ${upgrade.type === 'click' ? 'клик' : 'сек'})`;
+            btn.onclick = () => buyUpgrade(key);
+            btn.disabled = moneyBlogger < upgrade.cost;
+            
+            upgradeSection.appendChild(btn);
+        });
+    }
+
+    window.shootVideo = function() {
+        if (currentMode !== 'blogger') return;
+
+        const baseViews = viewsPerClick;
+        const newViews = baseViews * (1 + subscribers / 100); // Subscribers boost views
+        views += newViews;
+        
+        // 100 views -> 1 subscriber chance
+        subscribers += Math.floor(newViews / 100);
+        
+        // Convert views to money
+        const moneyEarned = newViews / 100; // 100 views = $1
+        moneyBlogger += moneyEarned;
+        
+        showMessage(`+${newViews.toFixed(1)} Просмотров, +$${moneyEarned.toFixed(2)}!`, 1000);
+        updateBloggerHUD();
+    }
+    
+    window.buyUpgrade = function(key) {
+        if (currentMode !== 'blogger') return;
+        
+        const upgrade = bloggerUpgrades[key];
+        if (moneyBlogger >= upgrade.cost && !upgrade.purchased) {
+            moneyBlogger -= upgrade.cost;
+            upgrade.purchased = true;
+            
+            if (upgrade.type === 'click') {
+                viewsPerClick += upgrade.effect;
+                showMessage(`${upgrade.name} куплено! Просмотры за клик: +${upgrade.effect}!`, 2000);
+            } else if (upgrade.type === 'auto') {
+                autoViewsPerSecond += upgrade.effect;
+                showMessage(`${upgrade.name} куплено! Просмотры/сек: +${upgrade.effect}!`, 2000);
+            }
+            
+            updateBloggerHUD();
+        }
+    }
+    
+    function updateBloggerLogic() {
+        document.getElementById('shoot-video-button').addEventListener('click', shootVideo);
+        updateBloggerHUD();
+    }
+    
+    function setupBloggerControls() {
+        document.removeEventListener('keydown', onBloggerKeyDown);
+        document.removeEventListener('keyup', onBloggerKeyUp);
+        document.addEventListener('keydown', onBloggerKeyDown);
+        document.addEventListener('keyup', onBloggerKeyUp);
+    }
+    
+    function onBloggerKeyDown(event) {
+        if (!bloggerControls || bloggerControls.isLocked !== true) return;
+        switch (event.code) {
+            case 'ArrowUp': case 'KeyW': moveForward = true; break;
+            case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+            case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+            case 'ArrowRight': case 'KeyD': moveRight = true; break;
+            case 'KeyE': shootVideo(); break; // Interaction key
+        }
+    }
+    
+    function onBloggerKeyUp(event) {
+        if (!bloggerControls || bloggerControls.isLocked !== true) return;
+        switch (event.code) {
+            case 'ArrowUp': case 'KeyW': moveForward = false; break;
+            case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+            case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+            case 'ArrowRight': case 'KeyD': moveRight = false; break;
+        }
+    }
+
+    // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И АНИМАЦИЯ ---
+    
+    // ... (updateClickerUI, updateCharacterPreview, showMessage, setupFarmControls, onFarmKeyDown, onFarmKeyUp, handlePlotInteraction, updateGrowth, toggleAdminFly, checkTrophyCollision, onKeyDown, onKeyUp - без изменений) ...
+
+    function updateClickerUI() {
+        document.getElementById('click-count').innerText = `Клики: ${clicks} (x${clickValue})`;
+        
+        const upgrade50Btn = document.getElementById('upgrade-50');
+        const upgrade90Btn = document.getElementById('upgrade-90');
+        const upgrade400Btn = document.getElementById('upgrade-400'); 
+
+        if (!upgrade50Purchased) {
+            upgrade50Btn.disabled = clicks < 50;
+            upgrade50Btn.innerText = `УЛУЧШЕНИЕ (Цена: 50). Клик x2`;
+        } else {
+            upgrade50Btn.disabled = true;
+            upgrade50Btn.innerText = `УЛУЧШЕНИЕ (КУПЛЕНО)`;
+        }
+
+        if (!upgrade90Purchased) {
+            upgrade90Btn.disabled = clicks < 90 || !upgrade50Purchased; 
+            upgrade90Btn.innerText = `МЕГА УЛУЧШЕНИЕ (Цена: 90). Клик x5`;
+        } else {
+            upgrade90Btn.disabled = true;
+            upgrade90Btn.innerText = `МЕГА УЛУЧШЕНИЕ (КУПЛЕНО)`;
+        }
+
+        if (!upgrade400Purchased) {
+            upgrade400Btn.disabled = clicks < 400 || !upgrade90Purchased;
+            upgrade400Btn.innerText = `СУПЕР УЛУЧШЕНИЕ (Цена: 400). Клик x10`;
+        } else {
+            upgrade400Btn.disabled = true;
+            upgrade400Btn.innerText = `СУПЕР УЛУЧШЕНИЕ (КУПЛЕНО)`;
+        }
+    }
+
+    document.getElementById('click-button').addEventListener('click', () => { clicks += clickValue; updateClickerUI(); });
+    document.getElementById('upgrade-50').addEventListener('click', () => { if (clicks >= 50 && !upgrade50Purchased) { clicks -= 50; clickValue = 2; upgrade50Purchased = true; updateClickerUI(); } });
+    document.getElementById('upgrade-90').addEventListener('click', () => { if (clicks >= 90 && !upgrade90Purchased && upgrade50Purchased) { clicks -= 90; clickValue = 5; upgrade90Purchased = true; updateClickerUI(); } });
+    document.getElementById('upgrade-400').addEventListener('click', () => { if (clicks >= 400 && !upgrade400Purchased && upgrade90Purchased) { clicks -= 400; clickValue = 10; upgrade400Purchased = true; updateClickerUI(); } });
+    
+    function updateCharacterPreview() {
+        if (!charParts.head) return;
+
+        charParts.headMat.color.set(document.getElementById('head-color').value);
+        charParts.torsoMat.color.set(document.getElementById('shirt-color').value);
+        charParts.legMat.color.set(document.getElementById('pants-color').value);
+        
+        charParts.hat.visible = document.getElementById('hat-toggle').checked;
+
+        const url = document.getElementById('face-texture-url').value.trim();
+        if (url) {
+            textureLoader.load(
+                url, 
+                function(texture) {
+                    const materials = [
+                        new THREE.MeshLambertMaterial({ color: charParts.headMat.color }), 
+                        new THREE.MeshLambertMaterial({ color: charParts.headMat.color }), 
+                        new THREE.MeshLambertMaterial({ color: charParts.headMat.color }), 
+                        new THREE.MeshLambertMaterial({ color: charParts.headMat.color }), 
+                        new THREE.MeshLambertMaterial({ map: texture }), 
+                        new THREE.MeshLambertMaterial({ color: charParts.headMat.color }) 
+                    ];
+                    charParts.head.material = materials;
+                },
+                undefined,
+                function(err) {
+                    console.error('Ошибка загрузки текстуры:', err);
+                    charParts.head.material = charParts.headMat;
+                }
+            );
+        } else {
+             charParts.head.material = charParts.headMat;
+        }
+    }
+
+    function showMessage(text, duration = 2000) {
+        const msg = document.getElementById('interaction-message');
+        msg.innerText = text;
+        msg.style.display = 'block';
+        clearTimeout(msg.timer);
+        msg.timer = setTimeout(() => {
+            msg.style.display = 'none';
+        }, duration);
+    }
+
+    function setupFarmControls() {
+        document.removeEventListener('keydown', onFarmKeyDown);
+        document.removeEventListener('keyup', onFarmKeyUp);
+        document.addEventListener('keydown', onFarmKeyDown);
+        document.addEventListener('keyup', onFarmKeyUp);
+        
+        document.getElementById('shop-button').addEventListener('click', () => {
+            document.getElementById('shop-modal').style.display = 'block';
+            updateFarmHUD();
+        });
+
+        if (farmRenderer) farmRenderer.domElement.addEventListener('click', handlePlotInteraction);
+    }
+    
+    function onFarmKeyDown(event) {
+        if (!farmControls || farmControls.isLocked !== true) return;
+        switch (event.code) {
+            case 'ArrowUp': case 'KeyW': moveForward = true; break;
+            case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+            case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+            case 'ArrowRight': case 'KeyD': moveRight = true; break;
+            case 'Space': 
+                if (farmCamera.position.y <= 1.5) { 
+                    velocity.y += 10;
+                }
+                break;
+        }
+    }
+
+    function onFarmKeyUp(event) {
+        if (!farmControls || farmControls.isLocked !== true) return;
+        switch (event.code) {
+            case 'ArrowUp': case 'KeyW': moveForward = false; break;
+            case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+            case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+            case 'ArrowRight': case 'KeyD': moveRight = false; break;
+        }
+    }
+    
+    function handlePlotInteraction() {
+        if (!farmControls || farmControls.isLocked !== true) return;
+        
+        const raycaster = new THREE.Raycaster();
+        const coords = new THREE.Vector2(0, 0); 
+
+        raycaster.setFromCamera(coords, farmCamera);
+        const intersects = raycaster.intersectObjects(plots);
+
+        if (intersects.length > 0) {
+            const plot = intersects[0].object;
+            const distance = intersects[0].distance;
+            
+            if (distance > INTERACTION_RANGE) {
+                 showMessage("Слишком далеко от грядки.", 1000);
+                 return;
+            }
+
+            const data = plot.userData;
+
+            if (data.growthState === 0) { 
+                if (farmInventory[selectedItemToPlant] > 0) {
+                    farmInventory[selectedItemToPlant] -= 1;
+                    data.planted = selectedItemToPlant;
+                    data.growthStart = performance.now();
+                    data.growthState = 1;
+                    
+                    if (plot.userData.plantMesh) farmScene.remove(plot.userData.plantMesh);
+                    
+                    const item = shopItems[data.planted];
+                    const seedGeo = new THREE.SphereGeometry(0.1, 8, 8);
+                    const seedMat = new THREE.MeshBasicMaterial({ color: 0xAAAAAA });
+                    const seed = new THREE.Mesh(seedGeo, seedMat);
+                    seed.position.set(plot.position.x, 0.05, plot.position.z);
+                    seed.castShadow = true; 
+                    farmScene.add(seed);
+                    plot.userData.plantMesh = seed;
+
+                    updateFarmHUD();
+                    showMessage(`Посажено ${item.icon} ${item.name}. Время роста: ${item.growthTime} сек.`, 2000);
+                } else {
+                    showMessage(`Нужно купить ${shopItems.carrot.icon} ${shopItems.carrot.name} (или другой предмет) в магазине!`, 2000);
+                }
+            } else if (data.growthState === 2) { 
+                const item = shopItems[data.planted];
+                farmInventory[data.planted] += 1; 
+                
+                farmScene.remove(plot.userData.plantMesh);
+                plot.userData.plantMesh = null;
+                data.planted = null;
+                data.growthStart = null;
+                data.growthState = 0; 
+
+                updateFarmHUD();
+                showMessage(`Собрано ${item.icon} ${item.name}! Готово к продаже.`, 2000);
+            } else if (data.growthState === 1) {
+                 const item = shopItems[data.planted];
+                 const elapsed = (performance.now() - data.growthStart) / 1000;
+                 const remaining = Math.max(0, item.growthTime - elapsed).toFixed(1);
+                 showMessage(`${item.icon} ${item.name} растет. Осталось ${remaining} сек.`, 1500);
+            }
+        }
+    }
+    
+    function updateGrowth(delta) {
+        plots.forEach(plot => {
+            const data = plot.userData;
+            if (data.growthState === 1 && data.growthStart) {
+                const item = shopItems[data.planted];
+                const elapsed = (performance.now() - data.growthStart) / 1000;
+                
+                if (elapsed >= item.growthTime) {
+                    data.growthState = 2; 
+                    showMessage(`${item.icon} ${item.name} вырос! Нажмите, чтобы собрать.`, 3000);
+                    
+                    if (plot.userData.plantMesh) farmScene.remove(plot.userData.plantMesh);
+                    
+                    let grownGeo, grownMat;
+                    if (data.planted === 'carrot') {
+                        grownGeo = new THREE.ConeGeometry(0.5, 2, 8);
+                        grownMat = new THREE.MeshStandardMaterial({ color: 0xFF8C00 });
+                    } else if (data.planted === 'watermelon') {
+                        grownGeo = new THREE.SphereGeometry(1, 16, 16);
+                        grownMat = new THREE.MeshStandardMaterial({ color: 0x38761D }); 
+                    } else {
+                        return;
+                    }
+                    
+                    const grownMesh = new THREE.Mesh(grownGeo, grownMat);
+                    grownMesh.position.set(plot.position.x, grownGeo.parameters.height / 2, plot.position.z);
+                    grownMesh.castShadow = true;
+                    farmScene.add(grownMesh);
+                    plot.userData.plantMesh = grownMesh;
+
+                } else {
+                    if (plot.userData.plantMesh) {
+                        const scale = 0.1 + (elapsed / item.growthTime) * 0.9;
+                        plot.userData.plantMesh.scale.set(scale, scale, scale);
+                    }
+                }
+            }
+        });
+    }
+
+    function toggleAdminFly() { 
+        isFlying = !isFlying;
+        velocity.y = 0; 
+        
+        const message = document.getElementById('trophy-message');
+
+        if (isFlying) {
+            message.innerText = "ADMIN MODE: ПОЛЕТ АКТИВИРОВАН 🚀";
+            message.style.display = 'block';
+        } else {
+            message.innerText = "ADMIN MODE: ПОЛЕТ ВЫКЛЮЧЕН 🛑";
+            setTimeout(() => { message.style.display = 'none'; }, 1500); 
+        }
+    }
+
+    function checkTrophyCollision() { 
+        if (!trophy || isFlying) return;
+
+        const playerPos = camera.position;
+        const trophyPos = trophy.position;
+        
+        if (
+            playerPos.x > trophyPos.x - 3 && playerPos.x < trophyPos.x + 3 && 
+            playerPos.y > trophyPos.y - 5 && playerPos.y < trophyPos.y + 5 &&
+            playerPos.z > trophyPos.z - 3 && playerPos.z < trophyPos.z + 3
+        ) {
+            isFlying = true;
+            scene.remove(trophy); 
+            document.getElementById('trophy-message').style.display = 'block';
+            document.getElementById('trophy-message').innerText = "🏆 ПОЗДРАВЛЯЕМ! РЕЖИМ ПОЛЕТА АКТИВИРОВАН! 🚀";
+        }
+    }
+
+    function onKeyDown(event) { 
+        if (!controls || !controls.isLocked) return;
+        switch (event.code) {
+            case 'ArrowUp': case 'KeyW': moveForward = true; break;
+            case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+            case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+            case 'ArrowRight': case 'KeyD': moveRight = true; break;
+            case 'Space':
+                if (isFlying) { flyUp = true; } 
+                else if (canJump) { velocity.y += 250; canJump = false; } 
+                break;
+            case 'KeyC': if (isFlying) { flyDown = true; } break;
+        }
+    }
+
+    function onKeyUp(event) { 
+        if (!controls || !controls.isLocked) return;
+        switch (event.code) {
+            case 'ArrowUp': case 'KeyW': moveForward = false; break;
+            case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+            case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+            case 'ArrowRight': case 'KeyD': moveRight = false; break;
+            case 'Space': if (isFlying) flyUp = false; break;
+            case 'KeyC': if (isFlying) flyDown = false; break;
+        }
+    }
+
+    function animate() {
+        if (!renderer) return;
+        animateId = requestAnimationFrame(animate);
+
+        const time = performance.now();
+        const delta = (time - prevTime) / 1000;
+
+        if (rotatingBlock1) rotatingBlock1.rotation.y += 0.02; 
+        if (rotatingBlock2) rotatingBlock2.rotation.y += 0.08; 
+        if (movingBlock) {
+            movingBlock.position.y += movingBlock.userData.direction * 5 * delta;
+            if (movingBlock.position.y > movingBlock.userData.startY + 10) movingBlock.userData.direction = -1;
+            else if (movingBlock.position.y < movingBlock.userData.startY - 10) movingBlock.userData.direction = 1;
+        }
+        
+        if (controls && controls.isLocked === true) {
+            
+            if (isFlying) {
+                velocity.y = 0; 
+                if (flyUp) velocity.y = FLY_SPEED * delta;
+                else if (flyDown) velocity.y = -FLY_SPEED * delta;
+                else velocity.y = 0; 
+                camera.position.y += velocity.y;
+            } else {
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+                velocity.y -= 9.8 * 70.0 * delta; 
+            }
+
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+
+            if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+            if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+
+            controls.moveRight(-velocity.x * delta);
+            controls.moveForward(-velocity.z * delta);
+            
+            if (!isFlying) {
+                camera.position.y += (velocity.y * delta);
+            }
+
+            checkTrophyCollision();
+
+            if (camera.position.y < -25) {
+                isFlying = false; 
+                velocity.set(0, 0, 0);
+                camera.position.set(0, 10, 0); 
+                document.getElementById('trophy-message').style.display = 'none';
+            } 
+            else {
+               const p = camera.position;
+               platforms.forEach(block => {
+                   const bx = block.position.x;
+                   const by = block.position.y;
+                   const bz = block.position.z;
+                   const bw = block.geometry.parameters.width / 2;
+                   const bd = block.geometry.parameters.depth / 2;
+                   const bh = block.geometry.parameters.height / 2;
+
+                   if (p.x > bx - bw -1 && p.x < bx + bw +1 &&
+                       p.z > bz - bd -1 && p.z < bz + bd +1) {
+                       
+                       if (p.y > by + bh && p.y < by + bh + 3) {
+                           if (!isFlying) velocity.y = 0; 
+                           p.y = by + bh + 1.8; // Adjusted player height (1.8 instead of 10)
+                           canJump = true;
+                           
+                           if (block === movingBlock && !isFlying) {
+                               p.y += movingBlock.userData.direction * 5 * delta;
+                           }
+                       }
+                   }
+               });
+            }
+        } 
+
+        prevTime = time;
+        renderer.render(scene, camera);
+    }
+
+    function farmAnimate(time) {
+        if (!farmRenderer) return;
+        farmAnimateId = requestAnimationFrame(farmAnimate);
+
+        const delta = (time - prevTime) / 1000;
+        
+        if (farmControls && farmControls.isLocked === true) {
+            
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
+            velocity.y -= 9.8 * 10.0 * delta; 
+
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+
+            if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * delta;
+            if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * delta;
+
+            farmControls.moveRight(-velocity.x * delta);
+            farmControls.moveForward(-velocity.z * delta);
+            
+            farmCamera.position.y += (velocity.y * delta);
+            
+            if (farmCamera.position.y < 1.5) {
+                velocity.y = 0;
+                farmCamera.position.y = 1.5;
+            }
+            
+            updateGrowth(delta);
+        }
+
+        farmRenderer.render(farmScene, farmCamera);
+        prevTime = time;
+    }
+    
+    function bloggerAnimate(time) {
+        if (!bloggerRenderer || currentMode !== 'blogger') return;
+        bloggerAnimateId = requestAnimationFrame(bloggerAnimate);
+
+        const delta = (time - prevTime) / 1000;
+        
+        // Passive Income / Auto-views logic
+        if (autoViewsPerSecond > 0) {
+            const autoViewsEarned = autoViewsPerSecond * delta;
+            views += autoViewsEarned;
+            moneyBlogger += autoViewsEarned / 100; // 100 views = $1
+            subscribers += Math.floor(autoViewsEarned / 100); // 100 auto-views = 1 subscriber
+
+            // Update UI every 0.5s to prevent flickering
+            if (time - lastAutoViewTime > 500) {
+                updateBloggerHUD();
+                lastAutoViewTime = time;
+            }
+        }
+        
+        if (bloggerControls && bloggerControls.isLocked === true) {
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
+            
+            // NO GRAVITY in studio
+            // velocity.y = 0; 
+
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+
+            if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * delta;
+            if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * delta;
+
+            bloggerControls.moveRight(-velocity.x * delta);
+            bloggerControls.moveForward(-velocity.z * delta);
+            
+            // Player Y stays locked at 1.6m (human height)
+            bloggerCamera.position.y = 1.6;
+            
+            // Simple interaction check for E key hint
+            const pc = bloggerScene.getObjectByProperty('userData', 'action');
+            if (pc) {
+                const camPos = bloggerCamera.position;
+                const pcPos = pc.position;
+                
+                if (camPos.distanceTo(pcPos) < 2.5) {
+                    document.getElementById('interaction-message').innerText = "Нажмите 'E' (или кликните кнопку) для съемки!";
+                } else {
+                     document.getElementById('interaction-message').innerText = "WASD для движения. ESC для меню.";
+                }
+            }
+
+        }
+        
+        // Reset player movement flags when controls are unlocked
+        if (bloggerControls && bloggerControls.isLocked === false) {
+             moveForward = moveBackward = moveLeft = moveRight = false;
+        }
+
+        bloggerRenderer.render(bloggerScene, bloggerCamera);
+        prevTime = time;
+    }
+    
+    function onWindowResize() { 
+        if (camera) {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        }
+        if (renderer) renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        if (editorCamera) {
+            editorCamera.aspect = window.innerWidth / window.innerHeight;
+            editorCamera.updateProjectionMatrix();
+        }
+        if (editorRenderer) editorRenderer.setSize(window.innerWidth, window.innerHeight);
+
+        if (farmCamera) {
+            farmCamera.aspect = window.innerWidth / window.innerHeight;
+            farmCamera.updateProjectionMatrix();
+        }
+        if (farmRenderer) farmRenderer.setSize(window.innerWidth, window.innerHeight);
+
+        if (bloggerCamera) { // НОВЫЙ
+            bloggerCamera.aspect = window.innerWidth / window.innerHeight;
+            bloggerCamera.updateProjectionMatrix();
+        }
+        if (bloggerRenderer) bloggerRenderer.setSize(window.innerWidth, window.innerHeight); // НОВЫЙ
+    }
+
+    // --- ЗАПУСК ---
+    performRegistration();
+    showMainMenu(); 
+</script>
+</body>
+</html>
